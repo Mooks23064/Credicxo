@@ -1,10 +1,11 @@
+
 from account.serializers import UserRegistrationSerializer, UserLoginSerializer
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
 from rest_auth.views import PasswordResetView, GenericAPIView
 from rest_framework import generics
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.response import Response
 from django.utils.decorators import method_decorator
 
@@ -21,7 +22,10 @@ class UserRegistrationView(generics.CreateAPIView):
     Custom User Registration View.
     """
     serializer_class = UserRegistrationSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+    """
+    Token validation on role based
+    """
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -38,6 +42,7 @@ class UserRegistrationView(generics.CreateAPIView):
                 "message": serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST
         )
+
 
 
 class UserLoginView(generics.GenericAPIView):
@@ -59,6 +64,11 @@ class UserLoginView(generics.GenericAPIView):
             return Response({
                 "success": True,
                 "data": self.serializer_class(instance=user).data})
+        else:
+            return Response({
+                "success": False,
+                "detail": _("You are not registered user call to 'Admin'.")
+            })
 
 
 class CustomPasswordResetView(PasswordResetView):
